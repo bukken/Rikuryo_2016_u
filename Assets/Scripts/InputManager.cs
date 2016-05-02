@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class InputManager : MonoBehaviour {
@@ -17,8 +18,8 @@ public class InputManager : MonoBehaviour {
 	void Update () {
 		Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
 		RaycastHit hit;
-		if (!hook_flag && Physics.Raycast (ray, out hit, Mathf.Infinity) && Input.GetMouseButton(0)) {
-			obj_point = hit.point;
+        if (!hook_flag && Physics.Raycast (ray, out hit, 300) && Input.GetMouseButton(0)) {
+ 			obj_point = hit.point;
 			hook_flag = true;
 		}
 		if (hook_flag) {

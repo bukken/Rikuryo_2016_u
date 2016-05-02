@@ -4,7 +4,6 @@ using System.Collections;
 public class simpleController : MonoBehaviour {
 
 	public float hook_power = 0.1f;
-    public float jump = 5f;
     public float rl_speed = 0.03f;
     public float fb_speed = 0.05f;
     public float accel = 0.001f;
@@ -12,9 +11,8 @@ public class simpleController : MonoBehaviour {
 	Vector3 speed = new Vector3(0.03f, 0,0.05f);
     Vector3 n_speed = Vector3.zero;
 	float height = 0.1f;
-	float off = 1.25f;
+	float hook_off = 1.25f;
     float rl_accel, fb_accel;
-    bool is_land;
 	Rigidbody rb;
 	LineRenderer lr;
     Animator animator;
@@ -25,7 +23,6 @@ public class simpleController : MonoBehaviour {
         animator = GetComponent<Animator> ();
 		lr.SetWidth (0.1f, 0.1f);
         lr.SetVertexCount (2);
-        is_land = true;
 	}
 
 	void Update () {
@@ -65,20 +62,28 @@ public class simpleController : MonoBehaviour {
             animator.SetTrigger("Jumping");
 		}
 
+        if (rb.velocity.magnitude > 50) rb.velocity = rb.velocity.normalized * 50;
+
         m_pos += n_speed;
 		transform.position = m_pos;
         animator.SetBool("Landing", is_Landing());
 	}
 
 	void HookShot(Vector3 end_pos){
-		Vector3 player_pos = transform.localPosition + new Vector3 (0, off, 0);
+		Vector3 player_pos = transform.localPosition + new Vector3 (0, hook_off, 0);
 		Vector3 target = end_pos - player_pos;
         bool is_r = true;
+        float t_gravity = 1.0f;
         if (target.x < 0) is_r = false;
-		rb.AddForce (hook_power * target.normalized, ForceMode.VelocityChange);
-		lr.enabled = true;
-        lr.SetPosition(0, player_pos + new Vector3(0.2f * (is_r?1:-1), 0.45f, 0.3f));
-		lr.SetPosition (1, end_pos);
+        if (target.x < 1 && target.z < 1) t_gravity = 0.5f;
+        if (Physics.CheckSphere(end_pos, 1.0f, (1 << 2))) t_gravity = 0.3f;
+        rb.AddForce(hook_power * target.normalized * t_gravity, ForceMode.VelocityChange);
+        lr.enabled = true;
+        lr.SetPosition(0, player_pos + new Vector3(0.2f * (is_r ? 1 : -1), 0.45f, 0.3f));
+        lr.SetPosition(1, end_pos);
+        if (Physics.CheckSphere(end_pos, 3.0f, (1 << 2)) &&
+            rb.velocity.magnitude > 10)
+            rb.velocity = rb.velocity.normalized * 10;
         animator.SetBool("Hooking", true);
         animator.SetFloat("target_x", target.x);
 	}
